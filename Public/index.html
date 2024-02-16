@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <style>
+        body {
+            background-color: #000; /* Arka planı siyah yap */
+        }
+
+        #chat-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .message-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding-right: 10px;
+        }
+
+        .message {
+            margin-bottom: 5px;
+            padding: 30px; /* Yazı boyutunu daha da artır */
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 48px; /* Yazı boyutunu daha da artır */
+        }
+
+        .my-message {
+            background-color: #007bff;
+            color: white;
+            text-align: right;
+        }
+
+        .their-message {
+            background-color: #f2f2f2;
+            color: #333;
+            text-align: left;
+        }
+
+        #message-input {
+            width: calc(100% - 100px); /* Genişlik yüzde olarak ayarlandı */
+            margin-right: 10px;
+            padding: 30px; /* Tuş boyutunu daha da artır */
+            box-sizing: border-box;
+            font-size: 48px; /* Yazı tipi boyutu artırıldı */
+        }
+
+        button {
+            width: 100px; /* Genişlik yüzde olarak ayarlandı */
+            padding: 30px; /* Tuş boyutunu daha da artır */
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 48px; /* Yazı tipi boyutu artırıldı */
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Yıldız animasyonu */
+        @keyframes star {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .star {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px; /* Yıldız boyutunu artır */
+            animation: star 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-box">
+        <div class="message-container" id="message-container"></div>
+        <div style="display: flex;">
+            <input type="text" id="message-input" placeholder="Mesajınızı yazın...">
+            <button onclick="sendMessage()">Gönder</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:3000');
+
+        socket.onmessage = function(event) {
+            const messageBox = document.getElementById('message-container');
+            const messageElement = document.createElement('div');
+            messageElement.textContent = event.data;
+            messageElement.classList.add('message');
+            if (event.data.startsWith('You:')) {
+                messageElement.classList.add('my-message');
+            } else {
+                messageElement.classList.add('their-message');
+            }
+            messageBox.appendChild(messageElement);
+            messageBox.scrollTop = messageBox.scrollHeight; // Otomatik olarak aşağı kaydır
+        };
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            if (message !== '') {
+                socket.send('You: ' + message);
+                const messageBox = document.getElementById('message-container');
+                const messageElement = document.createElement('div');
+                messageElement.textContent = 'You: ' + message;
+                messageElement.classList.add('message', 'my-message');
+                messageBox.appendChild(messageElement);
+                messageBox.scrollTop = messageBox.scrollHeight; // Otomatik olarak aşağı kaydır
+                messageInput.value = '';
+
+                // Yıldız emojisi ekleyin
+                createStar();
+            }
+        }
+
+        function createStar() {
+            const star = document.createElement('div');
+            star.textContent = '🌟';
+            star.classList.add('star');
+            document.body.appendChild(star);
+            // Yıldız elementini kaldır
+            setTimeout(function() {
+                star.remove();
+            }, 500); // 0.5 saniye sonra kaldır
+        }
+    </script>
+</body>
+</html>
